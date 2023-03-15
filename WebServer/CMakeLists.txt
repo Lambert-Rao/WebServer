@@ -10,11 +10,13 @@ set(SRCS
     #ThreadPool.cpp
     Timer.cpp
     Util.cpp
-)
+        user_api.cpp
+        sum_of_products.cpp
+        )
 include_directories(${PROJECT_SOURCE_DIR}/base)
 
 
-add_executable(WebServer ${SRCS})
+add_executable(WebServer ${SRCS} )
 target_link_libraries(WebServer libserver_base)
 
 

@@ -9,6 +9,7 @@
 #include "EventLoop.h"
 #include "Util.h"
 #include "time.h"
+#include "user_api.h"
 
 using namespace std;
 
@@ -534,30 +535,39 @@ AnalysisState HttpData::analysisRequest() {
     if (fileName_ == "favicon.ico") {
       header += "Content-Type: image/png\r\n";
       header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
-      header += "Server: LinYa's Web Server\r\n";
+      header += "Server: Lambert's Server\r\n";
 
       header += "\r\n";
       outBuffer_ += header;
       outBuffer_ += string(favicon, favicon + sizeof favicon);
-      ;
+
       return ANALYSIS_SUCCESS;
     }
 
     struct stat sbuf;
+
+    if (fileName_.substr(0,3) == "api") // 处理 api 请求
+    {
+      header.clear();
+      if(handle_api(header, outBuffer_,fileName_))
+          return ANALYSIS_SUCCESS;
+        else
+            return ANALYSIS_ERROR;
+    }
     if (stat(fileName_.c_str(), &sbuf) < 0) {
       header.clear();
       handleError(fd_, 404, "Not Found!");
       return ANALYSIS_ERROR;
     }
+
     header += "Content-Type: " + filetype + "\r\n";
     header += "Content-Length: " + to_string(sbuf.st_size) + "\r\n";
-    header += "Server: LinYa's Web Server\r\n";
+    header += "Server: Lambert's Server\r\n";
     // 头部结束
     header += "\r\n";
     outBuffer_ += header;
 
     if (method_ == METHOD_HEAD) return ANALYSIS_SUCCESS;
-
     int src_fd = open(fileName_.c_str(), O_RDONLY, 0);
     if (src_fd < 0) {
       outBuffer_.clear();
@@ -574,7 +584,7 @@ AnalysisState HttpData::analysisRequest() {
     }
     char *src_addr = static_cast<char *>(mmapRet);
     outBuffer_ += string(src_addr, src_addr + sbuf.st_size);
-    ;
+
     munmap(mmapRet, sbuf.st_size);
     return ANALYSIS_SUCCESS;
   }
@@ -588,13 +598,13 @@ void HttpData::handleError(int fd, int err_num, string short_msg) {
   body_buff += "<html><title>哎~出错了</title>";
   body_buff += "<body bgcolor=\"ffffff\">";
   body_buff += to_string(err_num) + short_msg;
-  body_buff += "<hr><em> LinYa's Web Server</em>\n</body></html>";
+  body_buff += "<hr><em> Lambert's Server</em>\n</body></html>";
 
   header_buff += "HTTP/1.1 " + to_string(err_num) + short_msg + "\r\n";
   header_buff += "Content-Type: text/html\r\n";
   header_buff += "Connection: Close\r\n";
   header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
-  header_buff += "Server: LinYa's Web Server\r\n";
+  header_buff += "Server: Lambert's Server\r\n";
   ;
   header_buff += "\r\n";
   // 错误处理不考虑writen不完的情况

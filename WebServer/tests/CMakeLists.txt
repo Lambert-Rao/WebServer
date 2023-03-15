@@ -1,1 +1,1 @@
-add_executable(HTTPClient HTTPClient.cpp)
+add_executable(HTTPClient HTTPClient.cpp ../user_api.cpp)
